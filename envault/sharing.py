@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 
 def generate_keypair() -> tuple[bytes, bytes]:
@@ -50,12 +50,31 @@ def encrypt_secret_for_recipient(secret: bytes, recipient_public_pem: bytes) -> 
 
 
 def decrypt_secret_from_sender(payload_json: str, recipient_private_pem: bytes) -> bytes:
-    """Decrypt a vault secret using the recipient's private key."""
-    payload = json.loads(payload_json)
-    ephemeral_pub_pem = b64decode(payload["ephemeral_pub"])
-    ciphertext = b64decode(payload["ciphertext"])
+    """Decrypt a vault secret using the recipient's private key.
+
+    Raises:
+        ValueError: If the payload is malformed or decryption fails.
+    """
+    try:
+        payload = json.loads(payload_json)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid sharing payload: {e}") from e
+
+    if "ephemeral_pub" not in payload or "ciphertext" not in payload:
+        raise ValueError("Sharing payload is missing required fields.")
+
+    try:
+        ephemeral_pub_pem = b64decode(payload["ephemeral_pub"])
+        ciphertext = b64decode(payload["ciphertext"])
+    except Exception as e:
+        raise ValueError(f"Failed to decode payload fields: {e}") from e
+
     recipient_priv = serialization.load_pem_private_key(recipient_private_pem, password=None)
     ephemeral_pub = serialization.load_pem_public_key(ephemeral_pub_pem)
     shared_secret = recipient_priv.exchange(ephemeral_pub)
     fernet = _derive_shared_fernet(shared_secret)
-    return fernet.decrypt(ciphertext)
+
+    try:
+        return fernet.decrypt(ciphertext)
+    except InvalidToken as e:
+        raise ValueError("Decryption failed: invalid key or corrupted ciphertext.") from e
