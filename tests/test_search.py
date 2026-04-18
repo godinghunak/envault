@@ -44,6 +44,12 @@ def test_search_value_finds_match(vault_dir, env_file):
     assert any(r["key"] == "DB_HOST" for r in results)
 
 
+def test_search_value_no_match(vault_dir, env_file):
+    push(vault_dir, env_file)
+    results = search_value(vault_dir, "pass", "doesnotexist")
+    assert results == []
+
+
 def test_search_across_versions(vault_dir, env_file, tmp_path):
     push(vault_dir, env_file)
     f2 = tmp_path / ".env2"
