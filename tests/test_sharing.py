@@ -24,6 +24,15 @@ def test_encrypt_decrypt_roundtrip():
     assert recovered == secret
 
 
+def test_encrypt_decrypt_roundtrip_empty_secret():
+    """Ensure empty byte strings can be encrypted and recovered."""
+    priv, pub = generate_keypair()
+    secret = b""
+    payload = encrypt_secret_for_recipient(secret, pub)
+    recovered = decrypt_secret_from_sender(payload, priv)
+    assert recovered == secret
+
+
 def test_different_recipients_cannot_decrypt():
     _, pub_alice = generate_keypair()
     priv_bob, _ = generate_keypair()
