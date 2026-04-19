@@ -35,3 +35,14 @@ def cmd_profile_show(args):
             print(f"  {k}: {v}")
     except KeyError as e:
         print(str(e))
+
+
+def cmd_profile_rename(args):
+    """Rename an existing profile to a new name."""
+    try:
+        info = get_profile(args.vault_dir, args.name)
+        add_profile(args.vault_dir, args.new_name, info['env_file'])
+        remove_profile(args.vault_dir, args.name)
+        print(f"Profile '{args.name}' renamed to '{args.new_name}'.")
+    except KeyError as e:
+        print(str(e))
