@@ -36,6 +36,15 @@ def cmd_alias_resolve(args) -> None:
         print(f"'{args.alias}' resolves to '{result}'.")
 
 
+def cmd_alias_check(args) -> None:
+    """Check whether a given alias exists in the vault."""
+    aliases = load_aliases(args.vault_dir)
+    if args.alias in aliases:
+        print(f"Alias '{args.alias}' exists (-> '{aliases[args.alias]}').")
+    else:
+        print(f"Alias '{args.alias}' does not exist.")
+
+
 def register(subparsers):
     p = subparsers.add_parser("alias", help="Manage key aliases")
     sp = p.add_subparsers(dest="alias_cmd")
@@ -55,3 +64,7 @@ def register(subparsers):
     res_p = sp.add_parser("resolve", help="Resolve an alias to its target")
     res_p.add_argument("alias")
     res_p.set_defaults(func=cmd_alias_resolve)
+
+    check_p = sp.add_parser("check", help="Check if an alias exists")
+    check_p.add_argument("alias")
+    check_p.set_defaults(func=cmd_alias_check)
