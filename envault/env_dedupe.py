@@ -69,3 +69,18 @@ def dedupe_env(text: str, keep: str = "last") -> str:
 def dedupe_dict(d: Dict[str, str]) -> Dict[str, str]:
     """Dicts are already deduplicated by nature; return a copy."""
     return dict(d)
+
+
+def summarize_duplicates(text: str) -> str:
+    """Return a human-readable summary of duplicate keys found in *text*.
+
+    Returns an empty string if no duplicates are detected.
+    """
+    duplicates = find_duplicates(text)
+    if not duplicates:
+        return ""
+    lines = [f"Found {len(duplicates)} duplicate key(s):"]
+    for dup in duplicates:
+        values_str = ", ".join(f'"{v}"' for v in dup.values)
+        lines.append(f"  {dup.key}: lines {', '.join(str(n) for n in dup.line_numbers)} -> values {values_str}")
+    return "\n".join(lines)
