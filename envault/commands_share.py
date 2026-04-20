@@ -38,11 +38,7 @@ def cmd_receive(args) -> None:
 
     Usage: envault receive --payload <payload_file_or_string>
     """
-    payload_path = Path(args.payload)
-    if payload_path.exists():
-        payload_json = payload_path.read_text()
-    else:
-        payload_json = args.payload
+    payload_json = _load_payload(args.payload)
     try:
         private_pem = load_private_key()
     except FileNotFoundError as exc:
@@ -54,3 +50,15 @@ def cmd_receive(args) -> None:
     except Exception as exc:
         print(f"Decryption failed: {exc}", file=sys.stderr)
         sys.exit(1)
+
+
+def _load_payload(payload_arg: str) -> str:
+    """Load payload JSON from a file path or return the raw string.
+
+    If *payload_arg* points to an existing file, its contents are read and
+    returned; otherwise the argument itself is treated as the raw payload.
+    """
+    payload_path = Path(payload_arg)
+    if payload_path.exists():
+        return payload_path.read_text()
+    return payload_arg
