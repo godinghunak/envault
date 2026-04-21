@@ -63,3 +63,15 @@ def test_cmd_rollback_bad_version_exits(vault_dir, env_file):
     args = make_args(vault_dir=vault_dir, version=42, output="/tmp/x.env")
     with pytest.raises(SystemExit):
         cmd_rollback(args)
+
+
+def test_cmd_rollback_wrong_password_exits(vault_dir, env_file, tmp_path):
+    """Ensure rollback exits with a non-zero status when the wrong password is supplied."""
+    push_version(vault_dir, ".env", env_file, PASSWORD)
+    output = str(tmp_path / "restored.env")
+    args = make_args(vault_dir=vault_dir, version=1, output=output,
+                     password="wrongpassword")
+    with pytest.raises(SystemExit):
+        cmd_rollback(args)
+    # The output file should not have been created with corrupted content
+    assert not os.path.exists(output)
