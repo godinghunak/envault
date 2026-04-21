@@ -8,6 +8,7 @@ from envault.rollback import rollback, list_versions
 
 PASSWORD = "test-password"
 ENV_CONTENT = b"DB_HOST=localhost\nDB_PORT=5432\nSECRET=abc123\n"
+ENV_CONTENT_V2 = b"DB_HOST=remotehost\nDB_PORT=5432\nSECRET=xyz789\n"
 
 
 @pytest.fixture
@@ -44,6 +45,25 @@ def test_rollback_restores_content(vault_dir, env_file, tmp_path):
     rollback(vault_dir, ".env", 1, PASSWORD, output)
     assert os.path.exists(output)
     assert open(output, "rb").read() == ENV_CONTENT
+
+
+def test_rollback_restores_specific_version(vault_dir, env_file, tmp_path):
+    """Ensure rollback retrieves the correct version when multiple exist."""
+    # Push version 1 with original content
+    push_version(vault_dir, ".env", env_file, PASSWORD)
+
+    # Push version 2 with updated content
+    env_file_v2 = str(tmp_path / ".env_v2")
+    with open(env_file_v2, "wb") as f:
+        f.write(ENV_CONTENT_V2)
+    push_version(vault_dir, ".env", env_file_v2, PASSWORD)
+
+    output = str(tmp_path / "restored.env")
+    rollback(vault_dir, ".env", 1, PASSWORD, output)
+    assert open(output, "rb").read() == ENV_CONTENT
+
+    rollback(vault_dir, ".env", 2, PASSWORD, output)
+    assert open(output, "rb").read() == ENV_CONTENT_V2
 
 
 def test_rollback_invalid_version_raises(vault_dir, env_file):
