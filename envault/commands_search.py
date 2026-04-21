@@ -4,6 +4,16 @@ from envault.search import search_key, search_value, search_in_version
 
 
 def cmd_search(args):
+    """Handle the search command.
+
+    Searches vault entries by key or value pattern. If a version is specified,
+    searches only within that specific version. Otherwise, searches across all
+    versions using the given mode ('key' or 'value').
+
+    Args:
+        args: Parsed CLI arguments containing vault_dir, password, pattern,
+              and optionally mode and version.
+    """
     vault_dir = args.vault_dir
     password = args.password
     pattern = args.pattern
