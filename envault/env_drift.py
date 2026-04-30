@@ -35,7 +35,17 @@ class DriftResult:
 
 
 def detect_drift(vault_env: Dict[str, str], file_env: Dict[str, str]) -> DriftResult:
-    """Return a DriftResult describing differences between vault and file."""
+    """Return a DriftResult describing differences between vault and file.
+
+    Args:
+        vault_env: Key/value pairs parsed from the stored vault version.
+        file_env:  Key/value pairs parsed from the live .env file.
+
+    Returns:
+        A DriftResult whose entries list every key that was added (present in
+        the file but not the vault), removed (present in the vault but not the
+        file), or changed (present in both but with differing values).
+    """
     result = DriftResult()
     all_keys = set(vault_env) | set(file_env)
     for key in sorted(all_keys):
@@ -53,10 +63,16 @@ def detect_drift(vault_env: Dict[str, str], file_env: Dict[str, str]) -> DriftRe
 
 
 def detect_drift_from_text(vault_text: str, file_text: str) -> DriftResult:
+    """Parse both raw .env texts and return a DriftResult for their differences."""
     return detect_drift(parse_env(vault_text), parse_env(file_text))
 
 
 def format_drift(result: DriftResult) -> str:
+    """Render a DriftResult as a human-readable string.
+
+    Returns a plain ``'No drift detected.'`` message when there are no
+    differences, otherwise lists every entry followed by a summary line.
+    """
     if not result.has_drift:
         return "No drift detected."
     lines = []
